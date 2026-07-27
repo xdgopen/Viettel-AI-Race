@@ -1,0 +1,21 @@
+# Local-dev-only overrides - never submit this file to the portal.
+#
+# Copy to docker-compose.override.yml (git-ignored) and edit the volume
+# path. Compose auto-loads docker-compose.override.yml; sweep/sweep_params.py
+# also loads it explicitly if present. Mirrors the 3-CPU / 8GB-RAM / 18GB-VRAM
+# MiG H200 slice as closely as a rented GPU box allows, so local numbers are
+# at least directionally comparable to the graded environment.
+services:
+  model:
+    volumes:
+      - /path/to/local/LFM2.5-1.2B-Instruct:/model:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "3"
+          memory: 8g
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

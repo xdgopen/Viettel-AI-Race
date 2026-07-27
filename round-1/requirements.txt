@@ -1,0 +1,9 @@
+# Core - required by workload/replay_trace.py, workload/generate_trace.py,
+# sweep/sweep_params.py, accuracy/run_gpqa_local.py.
+aiohttp>=3.9,<4
+
+# Optional - lets workload/text_fill.py render prompt text against the real
+# LiquidAI/LFM2.5-1.2B-Instruct tokenizer for exact token counts (falls back
+# to a word-count approximation without it). Needs network/HF cache access
+# to fetch the tokenizer once. Uncomment if you want exact counts locally:
+# transformers>=4.40

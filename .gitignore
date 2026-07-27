@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+
+round-1/docker-compose.override.yml
+round-1/results/

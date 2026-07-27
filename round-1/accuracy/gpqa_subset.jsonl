@@ -1,0 +1,8 @@
+{"id": 1, "question": "What is the SI base unit of electric current?", "choices": {"A": "Volt", "B": "Ampere", "C": "Ohm", "D": "Coulomb"}, "answer": "B"}
+{"id": 2, "question": "Which particle mediates the electromagnetic force?", "choices": {"A": "Gluon", "B": "W boson", "C": "Photon", "D": "Graviton"}, "answer": "C"}
+{"id": 3, "question": "In an ideal gas at constant temperature, if volume doubles, what happens to pressure?", "choices": {"A": "Doubles", "B": "Halves", "C": "Stays the same", "D": "Quadruples"}, "answer": "B"}
+{"id": 4, "question": "Which of these has the highest first ionization energy?", "choices": {"A": "Sodium", "B": "Magnesium", "C": "Neon", "D": "Argon"}, "answer": "C"}
+{"id": 5, "question": "What organelle is primarily responsible for ATP production in eukaryotic cells?", "choices": {"A": "Golgi apparatus", "B": "Mitochondrion", "C": "Ribosome", "D": "Lysosome"}, "answer": "B"}
+{"id": 6, "question": "Which quantum number determines the shape of an atomic orbital?", "choices": {"A": "Principal (n)", "B": "Azimuthal (l)", "C": "Magnetic (m_l)", "D": "Spin (m_s)"}, "answer": "B"}
+{"id": 7, "question": "What is the time complexity of binary search on a sorted array of size n?", "choices": {"A": "O(n)", "B": "O(n log n)", "C": "O(log n)", "D": "O(1)"}, "answer": "C"}
+{"id": 8, "question": "Which law states that entropy of an isolated system never decreases?", "choices": {"A": "First law of thermodynamics", "B": "Second law of thermodynamics", "C": "Third law of thermodynamics", "D": "Zeroth law of thermodynamics"}, "answer": "B"}

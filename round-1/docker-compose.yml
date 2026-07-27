@@ -1,0 +1,60 @@
+services:
+  model:
+    image: vllm/vllm-openai:v0.22.1
+    entrypoint:
+      - python3 #Don't change this to vllm-server
+      - -m #Don't change this to vllm-server
+      - vllm.entrypoints.openai.api_server #Don't change this to vllm-server
+    command:
+      - --model=/model #Don't change this to vllm-server
+      - --served-model-name=LFM2.5-1.2B-Instruct #Don't change this to vllm-server
+      - --host=0.0.0.0 #Don't change this to vllm-server
+      - --port=8000 #Don't change this to vllm-server
+      - --tensor-parallel-size=1
+      # Sized from docs/grading-workload-spec.json's published workload shape,
+      # not copied from the BTC sample's 32768: worst-case context at a
+      # conversation's last turn is shared_system_prefix_tokens (1000) +
+      # per_conversation_prefix_tokens (1000) + user_turns_per_conversation (6)
+      # x (new_user_tokens_per_turn 150 + output_tokens_per_turn_pinned 300)
+      # = 4700 tokens (see workload/schema.py summarize_trace()). 6144 leaves
+      # ~30% headroom for chat-template/special-token overhead. Freeing this
+      # much context budget vs. 32768 leaves far more VRAM for KV cache blocks
+      # -> should support materially higher --max-num-seqs; re-sweep after
+      # changing this. If the grading spec file changes, regenerate the
+      # trace and recompute this number - don't leave it stale.
+      - --max-model-len=${MAX_MODEL_LEN:-6144}
+      - --gpu-memory-utilization=${GPU_MEMORY_UTILIZATION:-0.95}
+      # Host has only 8GB system RAM (MiG H200 slice) - disable CPU swap so
+      # vLLM can't spill KV cache into host RAM and OOM-kill the container.
+      - --swap-space=0
+      - --enable-prefix-caching
+      # --- Carried-forward optimization flags: re-validate against the
+      # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
+      # across vLLM releases) - see docs/round-1/OPTIMIZATION_NOTES.md.
+      - --kv-cache-dtype=fp8
+      # 32 carried over from the old (32768-context) config. Re-sweep this
+      # upward with sweep/sweep_params.py now that --max-model-len dropped to
+      # 6144 - each sequence's KV cache footprint shrank ~5x, so more
+      # concurrent sequences should fit in the 18GB VRAM budget.
+      - --max-num-seqs=${MAX_NUM_SEQS:-32}
+      - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-8192}
+      - --enable-chunked-prefill
+      - --scheduler-policy=priority
+      # 3 CPU cores only - skip per-request log formatting overhead.
+      - --disable-log-requests
+    ports:
+      - "8000:8000"
+    shm_size: "2g"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
