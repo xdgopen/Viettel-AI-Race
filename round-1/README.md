@@ -77,11 +77,17 @@ one-shot requests) and prints an ERS report using the exact thresholds in
 ## 4. Sweep serving parameters
 
 ```bash
-python3 sweep/sweep_params.py --max-num-seqs 16 24 32 --max-num-batched-tokens 4096 8192 16384 --repeats 3
+python3 sweep/sweep_params.py \
+  --max-num-seqs 48 64 80 96 \
+  --max-num-batched-tokens 4096 6144 8192 12288 \
+  --repeats 5
 ```
 
 Ranks candidates by the spec's tie-break order (ERS, then p95 TTFT, then
-throughput) instead of raw ERS alone. Results land in `results/ranking.json`.
+throughput). Failed requests remain included with their official score of zero
+and make `all_requests_succeeded` false in the ranking; prefer a zero-error
+candidate unless the measured ERS evidence clearly favors another. Results land
+in `results/ranking.json`.
 
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 

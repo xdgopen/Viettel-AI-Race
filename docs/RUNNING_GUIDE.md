@@ -151,7 +151,10 @@ ceiling) - that tells you whether to focus tuning on prefill (TTFT,
 ## Step 9 (optional) — Sweep parameters to improve the score
 
 ```bash
-python3 sweep/sweep_params.py --max-num-seqs 16 32 48 64 --max-num-batched-tokens 4096 8192 16384 --repeats 3
+python3 sweep/sweep_params.py \
+  --max-num-seqs 48 64 80 96 \
+  --max-num-batched-tokens 4096 6144 8192 12288 \
+  --repeats 5
 cat results/ranking.json   # best candidate first, per the spec's tie-break order
 ```
 
