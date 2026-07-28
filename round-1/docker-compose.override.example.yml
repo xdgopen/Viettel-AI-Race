@@ -8,7 +8,7 @@
 services:
   model:
     volumes:
-      - /path/to/local/LFM2.5-1.2B-Instruct:/model:ro
+      - /workspace/models/LFM2.5-1.2B-Instruct/:/model:ro
     deploy:
       resources:
         limits:
