@@ -77,6 +77,10 @@ async def run(args: argparse.Namespace) -> None:
     accuracy = correct / len(items) if items else 0.0
     factor = accuracy_factor(accuracy, args.baseline_accuracy)
 
+    for item, ans in zip(items, answers):
+        if ans != item["answer"]:
+            print(f"MISS id={item['id']}: expected {item['answer']}, got {ans!r} - {item['question']}")
+
     print(f"Answered {answered}/{len(items)}; correct {correct}/{len(items)} -> accuracy={accuracy:.3f}")
     print(f"Delta = {args.baseline_accuracy:.3f} - {accuracy:.3f} = {args.baseline_accuracy - accuracy:.3f}")
     print(f"f(Delta) = {factor:.4f}")
