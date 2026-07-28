@@ -9,7 +9,8 @@ config/ers_config.py directly instead of an inline bash/heredoc JSON parser.
 
 Usage:
     python3 sweep/sweep_params.py --max-num-seqs 48 64 80 96 \
-        --max-num-batched-tokens 4096 6144 8192 12288 --repeats 5
+        --max-num-batched-tokens 4096 6144 8192 12288 \
+        --kv-cache-dtypes fp8 --repeats 5
 """
 
 from __future__ import annotations
@@ -101,6 +102,10 @@ def main() -> None:
                     default=[4096, 6144, 8192, 12288],
                     help="Includes smaller decode-friendly batches around the measured "
                          "8192-token winner; TPOT is currently the larger ERS loss.")
+    p.add_argument("--kv-cache-dtypes", nargs="+", choices=["fp8", "auto"],
+                    default=["fp8"],
+                    help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "
+                         "and a conservative default-precision fallback.")
     p.add_argument("--repeats", type=int, default=5, help="Runs per candidate; ranked by median ERS.")
     p.add_argument("--startup-timeout", type=float, default=300.0)
     p.add_argument("--request-timeout", type=float, default=120.0)
@@ -118,10 +123,16 @@ def main() -> None:
     print(f"Trace summary: {json.dumps(summarize_trace(trace_records))}")
 
     candidates = []
-    for seqs, tokens in product(args.max_num_seqs, args.max_num_batched_tokens):
-        name = f"seqs-{seqs}_tokens-{tokens}"
+    for seqs, tokens, kv_dtype in product(
+        args.max_num_seqs, args.max_num_batched_tokens, args.kv_cache_dtypes
+    ):
+        name = f"seqs-{seqs}_tokens-{tokens}_kv-{kv_dtype}"
         print(f"\n=== {name} ===")
-        recreate_container(files, {"MAX_NUM_SEQS": str(seqs), "MAX_NUM_BATCHED_TOKENS": str(tokens)})
+        recreate_container(files, {
+            "MAX_NUM_SEQS": str(seqs),
+            "MAX_NUM_BATCHED_TOKENS": str(tokens),
+            "KV_CACHE_DTYPE": kv_dtype,
+        })
 
         if not wait_healthy(args.health_url, args.startup_timeout):
             print(f"  container never became healthy, skipping {name}")
@@ -161,6 +172,7 @@ def main() -> None:
             "name": name,
             "max_num_seqs": seqs,
             "max_num_batched_tokens": tokens,
+            "kv_cache_dtype": kv_dtype,
             "ers_median": statistics.median(ers_values),
             "p95_ttft_ms_median": statistics.median(p95_ttft_values) if p95_ttft_values else float("inf"),
             "mean_tpot_ms_median": statistics.median(tpot_values) if tpot_values else float("inf"),

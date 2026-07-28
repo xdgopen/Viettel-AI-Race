@@ -80,6 +80,7 @@ one-shot requests) and prints an ERS report using the exact thresholds in
 python3 sweep/sweep_params.py \
   --max-num-seqs 48 64 80 96 \
   --max-num-batched-tokens 4096 6144 8192 12288 \
+  --kv-cache-dtypes fp8 \
   --repeats 5
 ```
 
@@ -88,6 +89,23 @@ throughput). Failed requests remain included with their official score of zero
 and make `all_requests_succeeded` false in the ranking; prefer a zero-error
 candidate unless the measured ERS evidence clearly favors another. Results land
 in `results/ranking.json`.
+
+If GPQA cannot run on the development machine, benchmark a conservative
+automatic KV-precision fallback alongside FP8:
+
+```bash
+python3 sweep/sweep_params.py \
+  --trace input/trace-descriptor.sample.jsonl \
+  --max-num-seqs 48 64 \
+  --max-num-batched-tokens 6144 8192 \
+  --kv-cache-dtypes fp8 auto \
+  --repeats 10 \
+  --results-dir results/finalists
+```
+
+The model weights stay at native precision in both cases. Recommended
+post-online candidates, subject to measured ERS, are `64/8192/fp8`,
+`48/8192/fp8`, `64/6144/fp8`, and `64/8192/auto`.
 
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 

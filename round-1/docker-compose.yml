@@ -33,7 +33,9 @@ services:
       # --- Carried-forward optimization flags: re-validate against the
       # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
       # across vLLM releases) - see docs/round-1/OPTIMIZATION_NOTES.md.
-      - --kv-cache-dtype=fp8
+      # FP8 is the ERS-oriented default. Set KV_CACHE_DTYPE=auto for a
+      # conservative fallback while keeping model weights at native precision.
+      - --kv-cache-dtype=${KV_CACHE_DTYPE:-fp8}
       # Re-swept via sweep/sweep_params.py after --max-model-len dropped to
       # 6144: seqs-64_tokens-8192 won (ers_median=0.7683, p95_ttft=55.3ms),
       # beating the old 32/8192 default (ers_median=0.7619) - see

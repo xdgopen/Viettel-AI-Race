@@ -154,9 +154,14 @@ ceiling) - that tells you whether to focus tuning on prefill (TTFT,
 python3 sweep/sweep_params.py \
   --max-num-seqs 48 64 80 96 \
   --max-num-batched-tokens 4096 6144 8192 12288 \
+  --kv-cache-dtypes fp8 \
   --repeats 5
 cat results/ranking.json   # best candidate first, per the spec's tie-break order
 ```
+
+If GPQA cannot run on this machine, use `--kv-cache-dtypes fp8 auto` and
+retain the best `auto` result as a conservative accuracy fallback. Neither
+setting quantizes the model weights.
 
 ## Step 10 (optional) — Sanity-check the Accuracy Gate
 
