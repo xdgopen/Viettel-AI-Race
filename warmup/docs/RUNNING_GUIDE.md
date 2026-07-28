@@ -150,12 +150,17 @@ ceiling) - that tells you whether to focus tuning on prefill (TTFT,
 
 ## Step 9 (optional) — Sweep parameters to improve the score
 
-The quick default performs only six replay runs: three for `64/6144` and
-three for `64/8192`.
+The current Compose default is the measured `80/4096/fp8` winner on the
+complete 420-request trace. For a small follow-up optimization, compare only
+batch-token limits around that winner:
 
 ```bash
-python3 sweep/sweep_params.py
-cat results/ranking.json   # best candidate first, per the spec's tie-break order
+python3 sweep/sweep_params.py \
+  --trace input/trace-descriptor.sample.jsonl \
+  --candidates 80:2048:fp8 80:3072:fp8 80:4096:fp8 \
+  --repeats 3 \
+  --results-dir results/ers-420-refine
+cat results/ers-420-refine/ranking.json
 ```
 
 If GPQA cannot run on this machine, use `--kv-cache-dtypes fp8 auto` and

@@ -83,6 +83,13 @@ For a 420-request run with roughly 82ms mean TTFT, 148ms p95 TTFT, and
 conversations, while the smaller prefill batch is intended to reduce decode
 interference. Keep the change only when median ERS improves with zero errors.
 
+Measured result: `80/4096/fp8` raised median ERS to 0.6745, compared with
+0.6570 for the `64/8192/fp8` control, and a subsequent replay reached
+0.6760 with 420/420 successes. It is now the Compose default. The next
+bounded experiment holds sequences and KV precision fixed and compares
+batch-token limits 2048, 3072, and 4096; this isolates the remaining
+TTFT-versus-TPOT scheduling trade-off.
+
 ## Still unexplored (spec section 3 lists these as allowed)
 
 - **Speculative decoding** (draft model or self-speculative) - could improve

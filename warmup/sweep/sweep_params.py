@@ -8,7 +8,7 @@ drives docker compose via subprocess and imports benchmark/report.py and
 config/ers_config.py directly instead of an inline bash/heredoc JSON parser.
 
 Usage:
-    # Quick default: 64/6144 vs. 64/8192, three runs each.
+    # Quick refinement: 80/2048 vs. 80/3072 vs. 80/4096, three runs each.
     python3 sweep/sweep_params.py
 
     # Optional broad exploration.
@@ -118,12 +118,12 @@ def main() -> None:
     p.add_argument("--trace", type=Path, default=ROOT / "input" / "trace-descriptor.sample.jsonl")
     p.add_argument("--url", default="http://localhost:8000/v1/chat/completions")
     p.add_argument("--health-url", default="http://localhost:8000/health")
-    p.add_argument("--max-num-seqs", type=int, nargs="+", default=[64],
-                    help="Sequence limits to test (quick default: 64).")
+    p.add_argument("--max-num-seqs", type=int, nargs="+", default=[80],
+                    help="Sequence limits to test (quick default: measured winner 80).")
     p.add_argument("--max-num-batched-tokens", type=int, nargs="+",
-                    default=[6144, 8192],
-                    help="Batch-token limits to test (quick default compares the "
-                         "decode-friendly 6144 against the measured 8192 winner).")
+                    default=[2048, 3072, 4096],
+                    help="Batch-token limits to test (quick default refines around "
+                         "the measured 4096 winner to target lower TPOT).")
     p.add_argument("--kv-cache-dtypes", nargs="+", choices=["fp8", "auto"],
                     default=["fp8"],
                     help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "

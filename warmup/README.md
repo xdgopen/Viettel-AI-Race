@@ -76,9 +76,9 @@ one-shot requests) and prints an ERS report using the exact thresholds in
 
 ## 4. Sweep serving parameters
 
-The default is deliberately small: it compares `64/6144` with `64/8192`
-using three runs each. Sweeping is optional; the submission default remains
-the previously measured `64/8192`.
+The default is deliberately small. Sweeping is optional; the current
+submission default is the measured `80/4096` winner on the complete
+70-conversation / 420-request trace.
 
 ```bash
 python3 sweep/sweep_params.py
@@ -133,6 +133,21 @@ python3 sweep/sweep_params.py \
 This tests the current control plus sequence capacity above the 70
 conversations and a smaller, decode-friendly prefill batch. It performs only
 nine replay runs instead of expanding every parameter combination.
+
+After `80/4096/fp8` wins, refine only the remaining batch-token trade-off:
+
+```bash
+python3 sweep/sweep_params.py \
+  --trace input/trace-descriptor.sample.jsonl \
+  --candidates 80:2048:fp8 80:3072:fp8 80:4096:fp8 \
+  --repeats 3 \
+  --results-dir results/ers-420-refine
+```
+
+The `4096` candidate is the control. Smaller values give decoding more
+scheduler time and may lower TPOT, but can increase TTFT by splitting large
+prefills into more chunks. Select strictly by median ERS with 420/420
+successful requests.
 
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 
