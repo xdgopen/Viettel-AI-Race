@@ -17,7 +17,7 @@ Usage:
 
     # Exact candidates, avoiding a Cartesian-product sweep.
     python3 sweep/sweep_params.py \
-        --candidates 64:8192:fp8 72:4096:fp8 80:4096:fp8
+        --candidates 80:3072:fp8:6144 80:3072:fp8:5120
 """
 
 from __future__ import annotations
@@ -98,19 +98,25 @@ def rank_key(candidate: dict):
             -candidate["throughput_tokens_per_s"])
 
 
-def parse_candidate(value: str) -> tuple[int, int, str]:
+def parse_candidate(value: str) -> tuple[int, int, str, int | None]:
     try:
-        seqs_text, tokens_text, kv_dtype = value.split(":")
+        parts = value.split(":")
+        if len(parts) not in {3, 4}:
+            raise ValueError
+        seqs_text, tokens_text, kv_dtype = parts[:3]
         seqs, tokens = int(seqs_text), int(tokens_text)
+        max_model_len = int(parts[3]) if len(parts) == 4 else None
     except ValueError as exc:
         raise argparse.ArgumentTypeError(
-            "candidate must be MAX_NUM_SEQS:MAX_NUM_BATCHED_TOKENS:KV_DTYPE"
+            "candidate must be SEQS:TOKENS:KV_DTYPE[:MAX_MODEL_LEN]"
         ) from exc
     if seqs <= 0 or tokens <= 0:
         raise argparse.ArgumentTypeError("candidate sequence and token limits must be positive")
     if kv_dtype not in {"fp8", "auto"}:
         raise argparse.ArgumentTypeError("candidate KV_DTYPE must be fp8 or auto")
-    return seqs, tokens, kv_dtype
+    if max_model_len is not None and max_model_len <= 0:
+        raise argparse.ArgumentTypeError("candidate MAX_MODEL_LEN must be positive")
+    return seqs, tokens, kv_dtype, max_model_len
 
 
 def main() -> None:
@@ -129,8 +135,8 @@ def main() -> None:
                     help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "
                          "and a conservative default-precision fallback.")
     p.add_argument("--candidates", nargs="+", type=parse_candidate,
-                    help="Exact SEQS:TOKENS:KV candidates. When provided, bypasses the "
-                         "Cartesian product of the three grid arguments.")
+                    help="Exact SEQS:TOKENS:KV[:MAX_MODEL_LEN] candidates. When "
+                         "provided, bypasses the Cartesian product grid.")
     p.add_argument("--repeats", type=int, default=3,
                     help="Runs per candidate (quick default: 3); ranked by median ERS.")
     p.add_argument("--startup-timeout", type=float, default=300.0)
@@ -148,17 +154,23 @@ def main() -> None:
     total_output_tokens = sum(sum(r.output_tokens_per_turn_pinned) for r in trace_records)
     print(f"Trace summary: {json.dumps(summarize_trace(trace_records))}")
 
-    candidate_grid = args.candidates or product(
-        args.max_num_seqs, args.max_num_batched_tokens, args.kv_cache_dtypes
+    candidate_grid = args.candidates or (
+        (seqs, tokens, kv_dtype, None)
+        for seqs, tokens, kv_dtype in product(
+            args.max_num_seqs, args.max_num_batched_tokens, args.kv_cache_dtypes
+        )
     )
     candidates = []
-    for seqs, tokens, kv_dtype in candidate_grid:
-        name = f"seqs-{seqs}_tokens-{tokens}_kv-{kv_dtype}"
+    for seqs, tokens, kv_dtype, max_model_len in candidate_grid:
+        effective_max_model_len = max_model_len or 6144
+        name = (f"seqs-{seqs}_tokens-{tokens}_kv-{kv_dtype}"
+                f"_len-{effective_max_model_len}")
         print(f"\n=== {name} ===")
         recreate_container(files, {
             "MAX_NUM_SEQS": str(seqs),
             "MAX_NUM_BATCHED_TOKENS": str(tokens),
             "KV_CACHE_DTYPE": kv_dtype,
+            "MAX_MODEL_LEN": str(effective_max_model_len),
         })
 
         if not wait_healthy(args.health_url, args.startup_timeout):
@@ -200,6 +212,7 @@ def main() -> None:
             "max_num_seqs": seqs,
             "max_num_batched_tokens": tokens,
             "kv_cache_dtype": kv_dtype,
+            "max_model_len": effective_max_model_len,
             "ers_median": statistics.median(ers_values),
             "p95_ttft_ms_median": statistics.median(p95_ttft_values) if p95_ttft_values else float("inf"),
             "mean_tpot_ms_median": statistics.median(tpot_values) if tpot_values else float("inf"),

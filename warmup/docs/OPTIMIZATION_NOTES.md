@@ -94,6 +94,11 @@ Refinement result: `80/3072/fp8` won with median ERS 0.6797, p95 TTFT
 99.2ms, mean TPOT 3.00ms, and 420/420 successes. It beat `80/2048/fp8`
 on ERS and both latency metrics, so 3072 is now the Compose default.
 
+The next exact-candidate test crosses batch tokens 2560/3072 with model
+lengths 5120/6144. A 5120 ceiling is eligible only if all 420 requests
+succeed: the published 4700-token maximum leaves limited chat-template
+headroom, so a single context-length failure outweighs any performance gain.
+
 ## Still unexplored (spec section 3 lists these as allowed)
 
 - **Speculative decoding** (draft model or self-speculative) - could improve

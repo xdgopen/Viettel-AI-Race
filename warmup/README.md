@@ -148,6 +148,22 @@ python3 sweep/sweep_params.py \
 3.00ms, and 420/420 successful requests. Treat `80/3072/fp8` as the new
 control for any later hardware-specific experiment.
 
+Next, test the intermediate batch size and context ceiling without a broad
+grid. The published maximum is 4700 tokens, so 5120 leaves 420 tokens of
+headroom; reject it if any request fails:
+
+```bash
+python3 sweep/sweep_params.py \
+  --trace input/trace-descriptor.sample.jsonl \
+  --candidates \
+    80:3072:fp8:6144 \
+    80:2560:fp8:6144 \
+    80:3072:fp8:5120 \
+    80:2560:fp8:5120 \
+  --repeats 3 \
+  --results-dir results/ers-420-context
+```
+
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 
 ```bash
