@@ -9,6 +9,26 @@ services:
   model:
     volumes:
       - /workspace/models/LFM2.5-1.2B-Instruct/:/model:ro
+    # docker-compose.yml's command: is hardcoded (no ${VAR:-default}), since
+    # BTC's grader doesn't perform Compose's env-var interpolation - a
+    # literal '${MAX_MODEL_LEN:-6144}' string reaching api_server.py caused
+    # a submission failure. Compose replaces (not merges) an override
+    # file's command: list wholesale, so sweep/sweep_params.py's env-var
+    # overrides only take effect locally if this full list is repeated here.
+    command:
+      - --model=/model #Don't change this to vllm-server
+      - --served-model-name=LFM2.5-1.2B-Instruct #Don't change this to vllm-server
+      - --host=0.0.0.0 #Don't change this to vllm-server
+      - --port=8000 #Don't change this to vllm-server
+      - --tensor-parallel-size=1
+      - --max-model-len=${MAX_MODEL_LEN:-6144}
+      - --gpu-memory-utilization=${GPU_MEMORY_UTILIZATION:-0.95}
+      - --enable-prefix-caching
+      - --kv-cache-dtype=${KV_CACHE_DTYPE:-fp8}
+      - --max-num-seqs=${MAX_NUM_SEQS:-80}
+      - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-3072}
+      - --enable-chunked-prefill
+      - --scheduling-policy=priority
     deploy:
       resources:
         limits:

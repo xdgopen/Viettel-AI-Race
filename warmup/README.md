@@ -164,6 +164,11 @@ python3 sweep/sweep_params.py \
   --results-dir results/ers-420-context
 ```
 
+Measured outcome: `80/3072/fp8/5120` was only 0.00085 ERS above the
+`80/3072/fp8/6144` control, while its p95 TTFT was about 8.8ms worse.
+That difference is below normal measurement noise, so the submission keeps
+`MAX_MODEL_LEN=6144` for context safety and the stronger tie-break metric.
+
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 
 ```bash

@@ -22,8 +22,17 @@ services:
       # -> should support materially higher --max-num-seqs; re-sweep after
       # changing this. If the grading spec file changes, regenerate the
       # trace and recompute this number - don't leave it stale.
-      - --max-model-len=${MAX_MODEL_LEN:-6144}
-      - --gpu-memory-utilization=${GPU_MEMORY_UTILIZATION:-0.95}
+      #
+      # Hardcoded, not ${VAR:-default} - BTC's grader spawns the container
+      # directly (see "spawn contestant container" in its error output)
+      # rather than invoking `docker compose up`, so it never performs
+      # Compose's own ${...} interpolation. A literal '${MAX_MODEL_LEN:-6144}'
+      # string reaching api_server.py caused a submission failure
+      # ("invalid human_readable_int_or_auto value"). Use
+      # docker-compose.override.yml (git-ignored, local-only) if you want
+      # env-var overrides while sweeping locally.
+      - --max-model-len=6144
+      - --gpu-memory-utilization=0.95
       # Host has only 8GB system RAM (MiG H200 slice). --swap-space was
       # removed in vllm/vllm-openai:v0.22.1 (V1 engine uses recomputation-
       # based preemption, not CPU swap) - KV cache offload to host RAM is
@@ -33,15 +42,16 @@ services:
       # --- Carried-forward optimization flags: re-validate against the
       # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
       # across vLLM releases) - see docs/warmup/OPTIMIZATION_NOTES.md.
-      # FP8 is the ERS-oriented default. Set KV_CACHE_DTYPE=auto for a
-      # conservative fallback while keeping model weights at native precision.
-      - --kv-cache-dtype=${KV_CACHE_DTYPE:-fp8}
+      # FP8 is the ERS-oriented default (hardcoded, not ${VAR:-default} -
+      # see the --max-model-len comment above for why: BTC's grader doesn't
+      # perform Compose env-var interpolation).
+      - --kv-cache-dtype=fp8
       # The full 70-conversation / 420-request trace selected 80/3072:
       # ers_median=0.6797, p95 TTFT=99.2ms, mean TPOT=3.00ms, with
       # 420/420 successes. It beat both 80/2048 and 80/4096.
       # Re-sweep if the trace shape, max-model-len, or target hardware changes.
-      - --max-num-seqs=${MAX_NUM_SEQS:-80}
-      - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-3072}
+      - --max-num-seqs=80
+      - --max-num-batched-tokens=3072
       - --enable-chunked-prefill
       # Renamed from --scheduler-policy in vllm/vllm-openai:v0.22.1.
       - --scheduling-policy=priority

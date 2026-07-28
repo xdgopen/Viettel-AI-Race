@@ -99,6 +99,11 @@ lengths 5120/6144. A 5120 ceiling is eligible only if all 420 requests
 succeed: the published 4700-token maximum leaves limited chat-template
 headroom, so a single context-length failure outweighs any performance gain.
 
+Result: 3072 tokens remained better than 2560. At 3072, model length 5120
+scored 0.67958 versus 0.67873 for 6144, but its p95 TTFT regressed from
+97.6ms to 106.4ms. The 0.00085 ERS difference is noise-sized and does not
+justify reduced context headroom, so the submission default remains 6144.
+
 ## Still unexplored (spec section 3 lists these as allowed)
 
 - **Speculative decoding** (draft model or self-speculative) - could improve
