@@ -4,5 +4,5 @@ __pycache__/
 venv/
 .DS_Store
 
-round-1/docker-compose.override.yml
-round-1/results/
+warmup/docker-compose.override.yml
+warmup/results/

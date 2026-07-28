@@ -8,7 +8,7 @@ the full gap analysis and architecture rationale behind this layout.
 ## Layout
 
 ```
-round-1/
+warmup/
 ├── docker-compose.yml                   # submission artifact - mirrors BTC's sample verbatim + optimization flags
 ├── docker-compose.override.example.yml  # local-only: model volume mount + 3-CPU/8GB-RAM/GPU limits
 ├── Dockerfile                           # only needed if you customize beyond flag-tuning
@@ -25,7 +25,7 @@ round-1/
 ## 1. Local setup
 
 ```bash
-cd round-1
+cd warmup
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 

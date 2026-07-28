@@ -36,7 +36,7 @@ Poll until ready:
 !tail -n 20 vllm.log   # look for "Uvicorn running on http://0.0.0.0:8000"
 ```
 
-## 3. Upload the repo's `round-1/` folder
+## 3. Upload the repo's `warmup/` folder
 
 Upload (or `git clone`) at least `workload/`, `benchmark/`, `config/`, and
 `input/trace-descriptor.sample.jsonl` into the Colab working directory, then:

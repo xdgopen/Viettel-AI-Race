@@ -83,7 +83,7 @@ huggingface-cli download LiquidAI/LFM2.5-1.2B-Instruct --local-dir /workspace/mo
 Set up the local override (mount + resource caps mimicking the graded slice):
 
 ```bash
-cd round-1
+cd warmup
 cp docker-compose.override.example.yml docker-compose.override.yml
 # edit docker-compose.override.yml:
 #   volumes: - /workspace/models/LFM2.5-1.2B-Instruct:/model:ro

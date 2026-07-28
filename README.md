@@ -21,13 +21,13 @@ viettel-bai-3/
 ├── README.md                  # Hướng dẫn chung toàn bộ dự án
 ├── docs/
 │   ├── requirement.html            # Đề bài & quy định hiện hành (nguồn tham chiếu chính thức)
-│   ├── PLANNING.md                 # Phân tích gap + kiến trúc refactor cho round-1/
+│   ├── PLANNING.md                 # Phân tích gap + kiến trúc refactor cho warmup/
 │   ├── grading-workload-spec.json  # Thông số workload thực tế (public) dùng để sinh trace mẫu
-│   └── Solution.md                 # Đã superseded - xem PLANNING.md / round-1/README.md
-└── round-1/                   # Không gian làm việc của Vòng 1 (Sơ loại) - xem round-1/README.md
+│   └── Solution.md                 # Đã superseded - xem PLANNING.md / warmup/README.md
+└── warmup/                   # Không gian làm việc của Vòng 1 (Sơ loại) - xem warmup/README.md
 ```
 
-`round-1/README.md` là điểm bắt đầu vận hành thực tế: setup, benchmark local,
+`warmup/README.md` là điểm bắt đầu vận hành thực tế: setup, benchmark local,
 sweep tham số, kiểm tra accuracy gate, và quy trình nộp bài.
 
 ---
@@ -35,7 +35,7 @@ sweep tham số, kiểm tra accuracy gate, và quy trình nộp bài.
 ## 3. Bắt Đầu Nhanh
 
 ```bash
-cd round-1
+cd warmup
 cat README.md
 ```
 
@@ -45,9 +45,9 @@ kèm cách đọc output/score? Xem
 
 Xem thêm:
 - [`docs/RUNNING_GUIDE.md`](docs/RUNNING_GUIDE.md) - hướng dẫn từng bước: chạy trên compute thuê & cách đọc output/score.
-- [`round-1/docs/OPTIMIZATION_NOTES.md`](round-1/docs/OPTIMIZATION_NOTES.md) - lý do chọn từng flag tối ưu.
-- [`round-1/docs/VAST_TESTING_GUIDE.md`](round-1/docs/VAST_TESTING_GUIDE.md) - hướng dẫn test trên GPU thuê qua Vast.ai, so sánh các tier GPU theo độ tin cậy (chi tiết + caveats).
-- [`round-1/docs/COLAB.md`](round-1/docs/COLAB.md) - phương án test thay thế bằng Google Colab (free T4).
+- [`warmup/docs/OPTIMIZATION_NOTES.md`](warmup/docs/OPTIMIZATION_NOTES.md) - lý do chọn từng flag tối ưu.
+- [`warmup/docs/VAST_TESTING_GUIDE.md`](warmup/docs/VAST_TESTING_GUIDE.md) - hướng dẫn test trên GPU thuê qua Vast.ai, so sánh các tier GPU theo độ tin cậy (chi tiết + caveats).
+- [`warmup/docs/COLAB.md`](warmup/docs/COLAB.md) - phương án test thay thế bằng Google Colab (free T4).
 
 ---
 

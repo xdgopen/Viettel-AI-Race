@@ -1,10 +1,10 @@
 # Step-by-Step: Running & Checking Output on Rented Compute
 
-Practical runbook for standing up the `round-1/` serving stack on a rented
+Practical runbook for standing up the `warmup/` serving stack on a rented
 Vast.ai GPU and reading the score it produces. For the *why* behind flag
 choices and rented-hardware-vs-H200 caveats, see
-[`round-1/docs/OPTIMIZATION_NOTES.md`](../round-1/docs/OPTIMIZATION_NOTES.md)
-and [`round-1/docs/VAST_TESTING_GUIDE.md`](../round-1/docs/VAST_TESTING_GUIDE.md) -
+[`warmup/docs/OPTIMIZATION_NOTES.md`](../warmup/docs/OPTIMIZATION_NOTES.md)
+and [`warmup/docs/VAST_TESTING_GUIDE.md`](../warmup/docs/VAST_TESTING_GUIDE.md) -
 this doc is the condensed command sequence to actually run.
 
 ## Step 1 — Rent the instance
@@ -22,7 +22,7 @@ all. Pick based on budget vs. fidelity to the graded Hopper-architecture H200:
 | Cheapest | Tesla T4, Tesla V100 | Likely unsupported (Volta/Turing) - smoke test only |
 
 Full rationale in
-[`round-1/docs/VAST_TESTING_GUIDE.md`](../round-1/docs/VAST_TESTING_GUIDE.md)
+[`warmup/docs/VAST_TESTING_GUIDE.md`](../warmup/docs/VAST_TESTING_GUIDE.md)
 section 0. Pick a Docker-enabled template, and request close to
 **3 vCPU / 8GB RAM** in the offer if the marketplace lets you constrain it.
 Launch it and copy the SSH command from the console.
@@ -41,10 +41,10 @@ docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
 
 ```bash
 # If pushed to a git remote:
-git clone <your-repo-url> && cd viettel-bai-3/round-1
+git clone <your-repo-url> && cd viettel-bai-3/warmup
 
 # Otherwise, from your local machine:
-rsync -avz -e "ssh -p <port>" round-1/ root@<host>:~/round-1/
+rsync -avz -e "ssh -p <port>" warmup/ root@<host>:~/warmup/
 ```
 
 ## Step 4 — Download the model weights
@@ -60,7 +60,7 @@ huggingface-cli download LiquidAI/LFM2.5-1.2B-Instruct --local-dir ~/models/LFM2
 ## Step 5 — Configure the local override and start the server
 
 ```bash
-cd ~/round-1
+cd ~/warmup
 cp docker-compose.override.example.yml docker-compose.override.yml
 ```
 
@@ -171,7 +171,7 @@ python3 accuracy/run_gpqa_local.py --url http://localhost:8000/v1/chat/completio
 
 This is a plumbing smoke test against 8 placeholder questions, not the real
 GPQA Diamond set - see
-[`round-1/accuracy/LM_EVAL_WIRING.md`](../round-1/accuracy/LM_EVAL_WIRING.md)
+[`warmup/accuracy/LM_EVAL_WIRING.md`](../warmup/accuracy/LM_EVAL_WIRING.md)
 for a closer approximation.
 
 ## Step 11 — Shut down
@@ -190,4 +190,4 @@ while running, whether or not the GPU is actively in use.
 | Container exits right after `up -d` | OOM on host RAM or VRAM | Lower `--gpu-memory-utilization`, confirm `--swap-space=0` is present, check `docker compose logs model` |
 | `errors: {"TIMEOUT": N}` | Server overloaded for the configured concurrency | Lower `--max-num-seqs`, or raise `--timeout` in `replay_trace.py` if the box is just slow (lower-tier GPU, not a real fix) |
 | `errors: {"HTTP_400: ..."}` | Context exceeds `--max-model-len` | Shouldn't happen at the current 6144 setting for the published trace shape; if you changed the trace, recompute via `workload/schema.py summarize_trace()` |
-| `ers` much lower than expected on a cheaper-tier GPU | Expected - see `round-1/docs/VAST_TESTING_GUIDE.md` section 0 | Treat as directional only; re-validate on Ada/Hopper-class hardware before trusting absolute numbers |
+| `ers` much lower than expected on a cheaper-tier GPU | Expected - see `warmup/docs/VAST_TESTING_GUIDE.md` section 0 | Treat as directional only; re-validate on Ada/Hopper-class hardware before trusting absolute numbers |

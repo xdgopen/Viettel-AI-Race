@@ -32,7 +32,7 @@ services:
       - --enable-prefix-caching
       # --- Carried-forward optimization flags: re-validate against the
       # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
-      # across vLLM releases) - see docs/round-1/OPTIMIZATION_NOTES.md.
+      # across vLLM releases) - see docs/warmup/OPTIMIZATION_NOTES.md.
       # FP8 is the ERS-oriented default. Set KV_CACHE_DTYPE=auto for a
       # conservative fallback while keeping model weights at native precision.
       - --kv-cache-dtype=${KV_CACHE_DTYPE:-fp8}
