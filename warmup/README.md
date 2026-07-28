@@ -118,6 +118,22 @@ The model weights stay at native precision in both cases. Recommended
 post-online candidates, subject to measured ERS, are `64/8192/fp8`,
 `48/8192/fp8`, `64/6144/fp8`, and `64/8192/auto`.
 
+For the published 70-conversation/420-request workload, use an exact
+three-candidate comparison when TTFT shows queueing and TPOT is the larger
+score loss:
+
+```bash
+python3 sweep/sweep_params.py \
+  --trace input/trace-descriptor.sample.jsonl \
+  --candidates 64:8192:fp8 72:4096:fp8 80:4096:fp8 \
+  --repeats 3 \
+  --results-dir results/ers-420
+```
+
+This tests the current control plus sequence capacity above the 70
+conversations and a smaller, decode-friendly prefill batch. It performs only
+nine replay runs instead of expanding every parameter combination.
+
 ## 5. Sanity-check the accuracy gate (optional, before choosing your ≤5 final picks)
 
 ```bash

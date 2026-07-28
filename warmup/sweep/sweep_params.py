@@ -14,6 +14,10 @@ Usage:
     # Optional broad exploration.
     python3 sweep/sweep_params.py --max-num-seqs 48 64 80 96 \
         --max-num-batched-tokens 4096 6144 8192 12288 --repeats 5
+
+    # Exact candidates, avoiding a Cartesian-product sweep.
+    python3 sweep/sweep_params.py \
+        --candidates 64:8192:fp8 72:4096:fp8 80:4096:fp8
 """
 
 from __future__ import annotations
@@ -94,6 +98,21 @@ def rank_key(candidate: dict):
             -candidate["throughput_tokens_per_s"])
 
 
+def parse_candidate(value: str) -> tuple[int, int, str]:
+    try:
+        seqs_text, tokens_text, kv_dtype = value.split(":")
+        seqs, tokens = int(seqs_text), int(tokens_text)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "candidate must be MAX_NUM_SEQS:MAX_NUM_BATCHED_TOKENS:KV_DTYPE"
+        ) from exc
+    if seqs <= 0 or tokens <= 0:
+        raise argparse.ArgumentTypeError("candidate sequence and token limits must be positive")
+    if kv_dtype not in {"fp8", "auto"}:
+        raise argparse.ArgumentTypeError("candidate KV_DTYPE must be fp8 or auto")
+    return seqs, tokens, kv_dtype
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--trace", type=Path, default=ROOT / "input" / "trace-descriptor.sample.jsonl")
@@ -109,6 +128,9 @@ def main() -> None:
                     default=["fp8"],
                     help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "
                          "and a conservative default-precision fallback.")
+    p.add_argument("--candidates", nargs="+", type=parse_candidate,
+                    help="Exact SEQS:TOKENS:KV candidates. When provided, bypasses the "
+                         "Cartesian product of the three grid arguments.")
     p.add_argument("--repeats", type=int, default=3,
                     help="Runs per candidate (quick default: 3); ranked by median ERS.")
     p.add_argument("--startup-timeout", type=float, default=300.0)
@@ -126,10 +148,11 @@ def main() -> None:
     total_output_tokens = sum(sum(r.output_tokens_per_turn_pinned) for r in trace_records)
     print(f"Trace summary: {json.dumps(summarize_trace(trace_records))}")
 
-    candidates = []
-    for seqs, tokens, kv_dtype in product(
+    candidate_grid = args.candidates or product(
         args.max_num_seqs, args.max_num_batched_tokens, args.kv_cache_dtypes
-    ):
+    )
+    candidates = []
+    for seqs, tokens, kv_dtype in candidate_grid:
         name = f"seqs-{seqs}_tokens-{tokens}_kv-{kv_dtype}"
         print(f"\n=== {name} ===")
         recreate_container(files, {

@@ -76,6 +76,13 @@ these numbers blindly):
 - Run each candidate ≥3 times (`--repeats 3`, the default) and rank by
   median - a single run's ERS is noisy enough to mislead a flag choice.
 
+For a 420-request run with roughly 82ms mean TTFT, 148ms p95 TTFT, and
+4.12ms mean TPOT, avoid a broad Cartesian grid. Compare the measured
+`64/8192/fp8` control directly with `72/4096/fp8` and `80/4096/fp8` using
+`sweep_params.py --candidates`. The higher sequence limits cover all 70
+conversations, while the smaller prefill batch is intended to reduce decode
+interference. Keep the change only when median ERS improves with zero errors.
+
 ## Still unexplored (spec section 3 lists these as allowed)
 
 - **Speculative decoding** (draft model or self-speculative) - could improve
