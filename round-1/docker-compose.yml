@@ -34,11 +34,12 @@ services:
       # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
       # across vLLM releases) - see docs/round-1/OPTIMIZATION_NOTES.md.
       - --kv-cache-dtype=fp8
-      # 32 carried over from the old (32768-context) config. Re-sweep this
-      # upward with sweep/sweep_params.py now that --max-model-len dropped to
-      # 6144 - each sequence's KV cache footprint shrank ~5x, so more
-      # concurrent sequences should fit in the 18GB VRAM budget.
-      - --max-num-seqs=${MAX_NUM_SEQS:-32}
+      # Re-swept via sweep/sweep_params.py after --max-model-len dropped to
+      # 6144: seqs-64_tokens-8192 won (ers_median=0.7683, p95_ttft=55.3ms),
+      # beating the old 32/8192 default (ers_median=0.7619) - see
+      # results/ranking.json. Re-sweep again if max-model-len or the trace
+      # shape changes.
+      - --max-num-seqs=${MAX_NUM_SEQS:-64}
       - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-8192}
       - --enable-chunked-prefill
       # Renamed from --scheduler-policy in vllm/vllm-openai:v0.22.1.
