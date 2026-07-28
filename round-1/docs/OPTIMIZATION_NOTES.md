@@ -13,8 +13,8 @@ exists because of one of these three numbers:
 
 | Constraint | Risk | Flag |
 |---|---|---|
-| 8GB host RAM | vLLM can spill KV cache to CPU RAM and OOM-kill the container | `--swap-space=0` |
-| 3 CPU cores | Per-request log formatting and scheduling overhead competes with token generation | `--disable-log-requests` |
+| 8GB host RAM | vLLM can spill KV cache to CPU RAM and OOM-kill the container | none needed - `--kv-offloading-size` (v0.22.1's replacement for `--swap-space`) defaults to disabled |
+| 3 CPU cores | Per-request log formatting and scheduling overhead competes with token generation | none needed - `--enable-log-requests` (v0.22.1's replacement for `--disable-log-requests`) defaults to `false` |
 | 1 GPU (MiG slice) | Multi-GPU parallelism is pointless overhead | `--tensor-parallel-size=1` |
 | 18GB VRAM | KV cache is the scarce resource, not compute | `--kv-cache-dtype=fp8`, `--enable-prefix-caching` |
 
@@ -92,7 +92,9 @@ these numbers blindly):
 ## Before submitting
 
 Re-verify every flag in `docker-compose.yml` is still accepted by the
-pinned `vllm/vllm-openai:v0.22.1` image - vLLM flags churn across releases
-and none of the carried-forward flags (`--kv-cache-dtype`,
-`--enable-chunked-prefill`, `--scheduler-policy`) have been re-validated
-against this specific version since the spec updated the target model.
+pinned `vllm/vllm-openai:v0.22.1` image - vLLM flags churn across releases.
+`--swap-space`, `--scheduler-policy`, and `--disable-log-requests` were
+confirmed removed/renamed in this version (see `docker-compose.yml`
+comments for the v0.22.1-compatible replacements) after hitting
+`unrecognized arguments` at container startup; `--kv-cache-dtype` and
+`--enable-chunked-prefill` were confirmed still accepted as-is.

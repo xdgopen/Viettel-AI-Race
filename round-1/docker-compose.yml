@@ -24,9 +24,11 @@ services:
       # trace and recompute this number - don't leave it stale.
       - --max-model-len=${MAX_MODEL_LEN:-6144}
       - --gpu-memory-utilization=${GPU_MEMORY_UTILIZATION:-0.95}
-      # Host has only 8GB system RAM (MiG H200 slice) - disable CPU swap so
-      # vLLM can't spill KV cache into host RAM and OOM-kill the container.
-      - --swap-space=0
+      # Host has only 8GB system RAM (MiG H200 slice). --swap-space was
+      # removed in vllm/vllm-openai:v0.22.1 (V1 engine uses recomputation-
+      # based preemption, not CPU swap) - KV cache offload to host RAM is
+      # now opt-in via --kv-offloading-size, which defaults to disabled, so
+      # no flag is needed here to get the same "never spill to host RAM" behavior.
       - --enable-prefix-caching
       # --- Carried-forward optimization flags: re-validate against the
       # pinned vllm/vllm-openai:v0.22.1 image before submitting (flags churn
@@ -39,9 +41,11 @@ services:
       - --max-num-seqs=${MAX_NUM_SEQS:-32}
       - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-8192}
       - --enable-chunked-prefill
-      - --scheduler-policy=priority
+      # Renamed from --scheduler-policy in vllm/vllm-openai:v0.22.1.
+      - --scheduling-policy=priority
       # 3 CPU cores only - skip per-request log formatting overhead.
-      - --disable-log-requests
+      # --disable-log-requests was replaced by --enable-log-requests
+      # (default false) in v0.22.1, so omitting it already gets this behavior.
     ports:
       - "8000:8000"
     shm_size: "2g"

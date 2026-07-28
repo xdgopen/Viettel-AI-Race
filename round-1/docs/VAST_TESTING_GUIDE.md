@@ -12,12 +12,14 @@ below based on budget vs. how much you need to trust the result.
 
 ## 0. Compute tiers on Vast.ai, ranked by fidelity to the graded H200
 
-| Tier | Example Vast.ai listings | Compute capability | FP8 support | Relative cost | Use for |
-|---|---|---|---|---|---|
-| **Best** - Hopper | H100 (80GB); H200 occasionally listed but rare/expensive | 9.0 | Native FP8 tensor cores | $$$ | Final pre-submission validation of any FP8/quantization decision - the only tier architecturally identical to the grading slice. |
-| **Good** - Ada Lovelace | L4 (24GB), L40/L40S (48GB), RTX 4090 (24GB) | 8.9 | Native FP8 tensor cores | $–$$ (L4/4090 often cheap) | Day-to-day tuning with FP8 confidence close to Hopper; L4 is inference-tuned and usually the best cost/fidelity balance. |
-| **Middle** - Ampere | A10/A10G (24GB), A100 (40/80GB), A40 (48GB), RTX 3090 (24GB) | 8.0 / 8.6 | **No FP8 tensor cores**, but meets vLLM's `--kv-cache-dtype=fp8` minimum (compute ≥8.0) - KV cache fp8 is a storage/quantize-dequantize format, not a tensor-core matmul, so this flag specifically should still exercise a real code path here, just without Ada/Hopper's throughput. | $–$$ | A reasonable middle ground for *this* config, since `docker-compose.yml` only quantizes the KV cache (not model weights) - Ampere is architecturally capable of that path, unlike the tier below. |
-| **Cheapest** - Volta/Turing ("Tesla"-branded) | Tesla T4 (16GB), Tesla V100 (16/32GB) | 7.0 / 7.5 | Below vLLM's fp8-kv-cache compute floor - likely rejected outright or unsupported | $ | Functional smoke tests only (does it start, does every request succeed) - least representative tier for anything latency- or FP8-related. |
+
+| Tier                                          | Example Vast.ai listings                                     | Compute capability | FP8 support                                                                                                                                                                                                                                                                            | Relative cost              | Use for                                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Best** - Hopper                             | H100 (80GB); H200 occasionally listed but rare/expensive     | 9.0                | Native FP8 tensor cores                                                                                                                                                                                                                                                                | $$$                        | Final pre-submission validation of any FP8/quantization decision - the only tier architecturally identical to the grading slice.                                                                  |
+| **Good** - Ada Lovelace                       | L4 (24GB), L40/L40S (48GB), RTX 4090 (24GB)                  | 8.9                | Native FP8 tensor cores                                                                                                                                                                                                                                                                | $–$$ (L4/4090 often cheap) | Day-to-day tuning with FP8 confidence close to Hopper; L4 is inference-tuned and usually the best cost/fidelity balance.                                                                          |
+| **Middle** - Ampere                           | A10/A10G (24GB), A100 (40/80GB), A40 (48GB), RTX 3090 (24GB) | 8.0 / 8.6          | **No FP8 tensor cores**, but meets vLLM's `--kv-cache-dtype=fp8` minimum (compute ≥8.0) - KV cache fp8 is a storage/quantize-dequantize format, not a tensor-core matmul, so this flag specifically should still exercise a real code path here, just without Ada/Hopper's throughput. | $–$$                       | A reasonable middle ground for *this* config, since `docker-compose.yml` only quantizes the KV cache (not model weights) - Ampere is architecturally capable of that path, unlike the tier below. |
+| **Cheapest** - Volta/Turing ("Tesla"-branded) | Tesla T4 (16GB), Tesla V100 (16/32GB)                        | 7.0 / 7.5          | Below vLLM's fp8-kv-cache compute floor - likely rejected outright or unsupported                                                                                                                                                                                                      | $                          | Functional smoke tests only (does it start, does every request succeed) - least representative tier for anything latency- or FP8-related.                                                         |
+
 
 Confirm the exact fp8 support boundary against the pinned
 `vllm/vllm-openai:v0.22.1` image yourself (compute-capability requirements
@@ -33,11 +35,13 @@ is cheapest but should be treated as a pure smoke test.
 Two constants regardless of tier:
 
 - **Memory bandwidth / VRAM won't match H200 exactly on any rented card** -
-  absolute TTFT/TPOT numbers won't transfer 1:1. Only *relative* comparisons
-  between two configs on the *same* rented card are meaningful.
+absolute TTFT/TPOT numbers won't transfer 1:1. Only *relative* comparisons
+between two configs on the *same* rented card are meaningful.
 - **CPU/RAM allocation** - Vast offers rarely give you exactly 3 CPU cores /
-  8GB RAM by default. Cap it explicitly (see section 2) or you won't catch
-  OOM/scheduling bottlenecks that would bite on the real grading slice.
+8GB RAM by default. Cap it explicitly (see section 2) or you won't catch
+OOM/scheduling bottlenecks that would bite on the real grading slice.
+
+
 
 ## 1. Pick an instance
 
@@ -47,15 +51,18 @@ than 18GB "for headroom" - it hides KV-cache-capacity bottlenecks that
 matter on the real slice, regardless of tier.
 
 When configuring the instance:
+
 - **CPU**: request as close to 3 vCPUs as the offer allows.
 - **RAM**: request as close to 8GB as the offer allows (Vast often bundles
-  more by default - explicitly set a lower limit in the Docker options if
-  the marketplace UI allows it, and again via `docker-compose.override.yml`,
-  see section 2).
+more by default - explicitly set a lower limit in the Docker options if
+the marketplace UI allows it, and again via `docker-compose.override.yml`,
+see section 2).
 - **Disk**: at least 20GB free for the model weights + Docker image layers.
 - **Template**: choose a Docker-enabled template ("provisioned with Docker
-  + NVIDIA Container Toolkit") so you don't have to install the toolkit
+  - NVIDIA Container Toolkit") so you don't have to install the toolkit
   yourself.
+
+
 
 ## 2. Verify the environment and prepare the model
 
@@ -92,9 +99,12 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f mode
 ```
 
 Watch the startup log for two things before moving on:
+
 1. `Uvicorn running on http://0.0.0.0:8000` (server is up).
 2. Any warning/error mentioning `fp8`, `kv_cache_dtype`, or a kernel
-   compatibility failure - see section 5 if you see one.
+  compatibility failure - see section 5 if you see one.
+
+
 
 ## 3. Smoke test
 
@@ -136,17 +146,17 @@ For `--kv-cache-dtype=fp8` specifically, what to expect depends on which
 tier from section 0 you're on:
 
 1. **Volta/Turing (Tesla T4/V100, compute <8.0)**: below vLLM's fp8-kv-cache
-   floor - the server likely **refuses to start**, or the flag is silently
+  floor - the server likely **refuses to start**, or the flag is silently
    rejected. Either way it's untestable on this tier; leave it in
    `docker-compose.yml` on the strength of it being spec-legal and
    effective on Hopper, but flag it as unverified in your own notes.
 2. **Ampere (A10/A100/A40/RTX 3090, compute 8.0/8.6)**: meets vLLM's
-   fp8-kv-cache compute floor, so the server should start and the
+  fp8-kv-cache compute floor, so the server should start and the
    quantize/dequantize path is real - but there's no FP8 tensor-core
    acceleration backing it, so don't over-trust the *magnitude* of any
    throughput gain you measure, only whether it helps or hurts directionally.
 3. **Ada/Hopper (L4/L40S/RTX 4090/H100, compute ≥8.9)**: same tensor-core
-   generation as the graded H200 - this is the tier whose FP8 numbers are
+  generation as the graded H200 - this is the tier whose FP8 numbers are
    actually worth trusting for a go/no-go decision.
 
 If you can get any time on an Ada/Hopper-class rental before finalizing,
@@ -174,21 +184,32 @@ greedy-decoding outputs, but this effect should be negligible next to the
 
 - `docker compose down` to release the GPU cleanly.
 - Vast.ai bills per-hour while the instance is running (even if you're not
-  actively using the GPU) - stop or destroy the instance once you've saved
-  `results/` locally.
+actively using the GPU) - stop or destroy the instance once you've saved
+`results/` locally.
 - Do **not** commit `docker-compose.override.yml` or anything under
-  `results/` (both are git-ignored) - the submission artifact is the
-  unmodified `docker-compose.yml`.
+`results/` (both are git-ignored) - the submission artifact is the
+unmodified `docker-compose.yml`.
+
+
 
 ## 8. Final pre-submission checklist
 
 - [ ] `docker compose config` on `docker-compose.yml` alone (no override)
-      resolves cleanly.
+  ```
+  resolves cleanly.
+  ```
 - [ ] `entrypoint`/`--model`/`--served-model-name`/`--host`/`--port` lines
-      are untouched (still carry the `#Don't change this to vllm-server`
-      comments).
+  ```
+  are untouched (still carry the `#Don't change this to vllm-server`
+  comments).
+  ```
 - [ ] A full `workload/replay_trace.py` run against the unmodified
-      `docker-compose.yml` (no override) reaches `success == requests`.
+  ```
+  `docker-compose.yml` (no override) reaches `success == requests`.
+  ```
 - [ ] Any FP8/quantization decision has either been validated on
-      Ada/Hopper-class hardware, or you've accepted the risk knowingly
-      given section 5's caveats.
+  ```
+  Ada/Hopper-class hardware, or you've accepted the risk knowingly
+  given section 5's caveats.
+  ```
+
