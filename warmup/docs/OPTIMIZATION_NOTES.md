@@ -90,6 +90,10 @@ bounded experiment holds sequences and KV precision fixed and compares
 batch-token limits 2048, 3072, and 4096; this isolates the remaining
 TTFT-versus-TPOT scheduling trade-off.
 
+Refinement result: `80/3072/fp8` won with median ERS 0.6797, p95 TTFT
+99.2ms, mean TPOT 3.00ms, and 420/420 successes. It beat `80/2048/fp8`
+on ERS and both latency metrics, so 3072 is now the Compose default.
+
 ## Still unexplored (spec section 3 lists these as allowed)
 
 - **Speculative decoding** (draft model or self-speculative) - could improve

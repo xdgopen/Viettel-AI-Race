@@ -150,9 +150,8 @@ ceiling) - that tells you whether to focus tuning on prefill (TTFT,
 
 ## Step 9 (optional) — Sweep parameters to improve the score
 
-The current Compose default is the measured `80/4096/fp8` winner on the
-complete 420-request trace. For a small follow-up optimization, compare only
-batch-token limits around that winner:
+The current Compose default is the measured `80/3072/fp8` winner on the
+complete 420-request trace. The command below reproduces its comparison:
 
 ```bash
 python3 sweep/sweep_params.py \

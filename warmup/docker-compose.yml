@@ -36,11 +36,12 @@ services:
       # FP8 is the ERS-oriented default. Set KV_CACHE_DTYPE=auto for a
       # conservative fallback while keeping model weights at native precision.
       - --kv-cache-dtype=${KV_CACHE_DTYPE:-fp8}
-      # The full 70-conversation / 420-request trace selected 80/4096:
-      # ers_median=0.6745 versus 0.6570 for 64/8192, with 420/420 successes.
+      # The full 70-conversation / 420-request trace selected 80/3072:
+      # ers_median=0.6797, p95 TTFT=99.2ms, mean TPOT=3.00ms, with
+      # 420/420 successes. It beat both 80/2048 and 80/4096.
       # Re-sweep if the trace shape, max-model-len, or target hardware changes.
       - --max-num-seqs=${MAX_NUM_SEQS:-80}
-      - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-4096}
+      - --max-num-batched-tokens=${MAX_NUM_BATCHED_TOKENS:-3072}
       - --enable-chunked-prefill
       # Renamed from --scheduler-policy in vllm/vllm-openai:v0.22.1.
       - --scheduling-policy=priority

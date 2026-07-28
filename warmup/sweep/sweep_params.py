@@ -8,7 +8,7 @@ drives docker compose via subprocess and imports benchmark/report.py and
 config/ers_config.py directly instead of an inline bash/heredoc JSON parser.
 
 Usage:
-    # Quick refinement: 80/2048 vs. 80/3072 vs. 80/4096, three runs each.
+    # Quick validation: 80/2048 vs. 80/3072 vs. 80/4096, three runs each.
     python3 sweep/sweep_params.py
 
     # Optional broad exploration.
@@ -122,8 +122,8 @@ def main() -> None:
                     help="Sequence limits to test (quick default: measured winner 80).")
     p.add_argument("--max-num-batched-tokens", type=int, nargs="+",
                     default=[2048, 3072, 4096],
-                    help="Batch-token limits to test (quick default refines around "
-                         "the measured 4096 winner to target lower TPOT).")
+                    help="Batch-token limits to test (quick default validates the "
+                         "measured 3072 winner against its neighbors).")
     p.add_argument("--kv-cache-dtypes", nargs="+", choices=["fp8", "auto"],
                     default=["fp8"],
                     help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "
