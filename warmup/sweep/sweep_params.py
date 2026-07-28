@@ -8,9 +8,12 @@ drives docker compose via subprocess and imports benchmark/report.py and
 config/ers_config.py directly instead of an inline bash/heredoc JSON parser.
 
 Usage:
+    # Quick default: 64/6144 vs. 64/8192, three runs each.
+    python3 sweep/sweep_params.py
+
+    # Optional broad exploration.
     python3 sweep/sweep_params.py --max-num-seqs 48 64 80 96 \
-        --max-num-batched-tokens 4096 6144 8192 12288 \
-        --kv-cache-dtypes fp8 --repeats 5
+        --max-num-batched-tokens 4096 6144 8192 12288 --repeats 5
 """
 
 from __future__ import annotations
@@ -96,17 +99,18 @@ def main() -> None:
     p.add_argument("--trace", type=Path, default=ROOT / "input" / "trace-descriptor.sample.jsonl")
     p.add_argument("--url", default="http://localhost:8000/v1/chat/completions")
     p.add_argument("--health-url", default="http://localhost:8000/health")
-    p.add_argument("--max-num-seqs", type=int, nargs="+", default=[48, 64, 80, 96],
-                    help="Search around and above the measured 64-sequence winner.")
+    p.add_argument("--max-num-seqs", type=int, nargs="+", default=[64],
+                    help="Sequence limits to test (quick default: 64).")
     p.add_argument("--max-num-batched-tokens", type=int, nargs="+",
-                    default=[4096, 6144, 8192, 12288],
-                    help="Includes smaller decode-friendly batches around the measured "
-                         "8192-token winner; TPOT is currently the larger ERS loss.")
+                    default=[6144, 8192],
+                    help="Batch-token limits to test (quick default compares the "
+                         "decode-friendly 6144 against the measured 8192 winner).")
     p.add_argument("--kv-cache-dtypes", nargs="+", choices=["fp8", "auto"],
                     default=["fp8"],
                     help="Use 'fp8 auto' to benchmark both the ERS-oriented setting "
                          "and a conservative default-precision fallback.")
-    p.add_argument("--repeats", type=int, default=5, help="Runs per candidate; ranked by median ERS.")
+    p.add_argument("--repeats", type=int, default=3,
+                    help="Runs per candidate (quick default: 3); ranked by median ERS.")
     p.add_argument("--startup-timeout", type=float, default=300.0)
     p.add_argument("--request-timeout", type=float, default=120.0)
     p.add_argument("--tokenizer", default="",

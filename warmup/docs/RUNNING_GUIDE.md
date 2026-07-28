@@ -150,18 +150,28 @@ ceiling) - that tells you whether to focus tuning on prefill (TTFT,
 
 ## Step 9 (optional) — Sweep parameters to improve the score
 
+The quick default performs only six replay runs: three for `64/6144` and
+three for `64/8192`.
+
 ```bash
-python3 sweep/sweep_params.py \
-  --max-num-seqs 48 64 80 96 \
-  --max-num-batched-tokens 4096 6144 8192 12288 \
-  --kv-cache-dtypes fp8 \
-  --repeats 5
+python3 sweep/sweep_params.py
 cat results/ranking.json   # best candidate first, per the spec's tie-break order
 ```
 
 If GPQA cannot run on this machine, use `--kv-cache-dtypes fp8 auto` and
 retain the best `auto` result as a conservative accuracy fallback. Neither
 setting quantizes the model weights.
+
+The broader grid remains available but is optional:
+
+```bash
+python3 sweep/sweep_params.py \
+  --max-num-seqs 48 64 80 96 \
+  --max-num-batched-tokens 4096 6144 8192 12288 \
+  --kv-cache-dtypes fp8 \
+  --repeats 5 \
+  --results-dir results/full-sweep
+```
 
 ## Step 10 (optional) — Sanity-check the Accuracy Gate
 

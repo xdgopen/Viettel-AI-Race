@@ -76,12 +76,12 @@ one-shot requests) and prints an ERS report using the exact thresholds in
 
 ## 4. Sweep serving parameters
 
+The default is deliberately small: it compares `64/6144` with `64/8192`
+using three runs each. Sweeping is optional; the submission default remains
+the previously measured `64/8192`.
+
 ```bash
-python3 sweep/sweep_params.py \
-  --max-num-seqs 48 64 80 96 \
-  --max-num-batched-tokens 4096 6144 8192 12288 \
-  --kv-cache-dtypes fp8 \
-  --repeats 5
+python3 sweep/sweep_params.py
 ```
 
 Ranks candidates by the spec's tie-break order (ERS, then p95 TTFT, then
@@ -89,6 +89,17 @@ throughput). Failed requests remain included with their official score of zero
 and make `all_requests_succeeded` false in the ranking; prefer a zero-error
 candidate unless the measured ERS evidence clearly favors another. Results land
 in `results/ranking.json`.
+
+Only use the broader, slower grid when hardware time permits:
+
+```bash
+python3 sweep/sweep_params.py \
+  --max-num-seqs 48 64 80 96 \
+  --max-num-batched-tokens 4096 6144 8192 12288 \
+  --kv-cache-dtypes fp8 \
+  --repeats 5 \
+  --results-dir results/full-sweep
+```
 
 If GPQA cannot run on the development machine, benchmark a conservative
 automatic KV-precision fallback alongside FP8:
