@@ -1,6 +1,11 @@
 services:
   model:
-    image: vllm/vllm-openai:v0.22.1
+    # Tag-referenced while still iterating (1.0 failed - missing ENV; 1.1
+    # adds the fix). Re-pin to `@sha256:<digest>` once this build is final -
+    # "Trao doi Docker image sau khi da nop bai" is an explicitly prohibited
+    # anti-cheat violation per requirement.html S5, so the *submitted*
+    # version should be digest-pinned, not left floating on a mutable tag.
+    image: xdgopen/viettelairace:1.1
     entrypoint:
       - python3 #Don't change this to vllm-server
       - -m #Don't change this to vllm-server
